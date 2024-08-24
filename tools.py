@@ -1,15 +1,21 @@
+import asyncio
 import os
+import random
 import sys
 import time
 import json
 import logging
+from datetime import datetime, timedelta
+
 import win32api
 import threading
 from pathlib import Path
 from typing import Union
 from pydantic import BaseModel
 
+from app_env import auto_load_env
 from constant import BASE_PATH
+from importlib import import_module
 
 logger = logging.getLogger('default')
 message_type = {
@@ -20,6 +26,23 @@ message_type = {
 }
 
 
+def is_pid_alive(pid):
+    try:
+        os.kill(pid, 0)
+        return True
+    except Exception:
+        return False
+
+
+def wait_next_minute():
+    target_time = (datetime.now() + timedelta(minutes=1)).replace(microsecond=0, second=0)
+    while True:
+        now = datetime.now()
+        if now >= target_time:
+            print('checked: ', now)
+            break
+        time.sleep(0.005)
+
 def set_timeout(delay, cb, *args):
     """异步调用函数"""
     threading.Timer(delay, cb, args).start()
@@ -28,7 +51,8 @@ def set_timeout(delay, cb, *args):
 def reset_pid():
     conf = JSONCache(file=BASE_PATH / '__conf__.json')
     command = 'kill -9 %s' % conf.pid if sys.platform == 'linux' else 'cmd /c taskkill /f /pid %s' % conf.pid
-    os.system(command)
+    if is_pid_alive(conf['pid']):
+        os.system(command)
 
     conf['pid'] = os.getpid()
 
@@ -149,21 +173,74 @@ def show_windows_message(message: Union[str, dict]):
     logger.info('task: ' + json.dumps(message, indent=2, ensure_ascii=False))
 
     message = Message(**message)
-    
+
     return win32api.MessageBoxEx(0, message.content, message.title, message_type[message.type])
 
 
 def process_tasks(tasks):
     for task in tasks:
-        moment = task['cron']
-        if cron(moment):
-            try:
-                show_windows_message(task)
-            except Exception as e:
-                error_message = f"task run time error : {e}"
-                logger.error(error_message)
-                show_windows_message({
-                    "type": "error",
-                    "title": "定时任务运行出错",
-                    "message": error_message
-                })
+        if 'func' in task:
+            if task['func'] == 'skip':
+                continue
+            elif task['func'] == 'reload_environment':
+                auto_load_env()
+                continue
+            elif task['func'] == 'reload_addons':
+                add_addons()
+                continue
+            elif task['func'] == 'stop':
+                time.sleep(20)
+                asyncio.get_event_loop_policy().get_event_loop().stop()
+                return logger.info(f'tasks is stop.')
+
+        if 'cron' in task:
+            if cron(task['cron']):
+                try:
+                    func = funcs.get(task.get('func'))
+                    if not func or not callable(func):
+                        return logger.error(f'{func} is not callable. skip the {task}.')
+                    task = func(task)
+                    set_timeout(0, show_windows_message, task)
+                    # show_windows_message(task)
+                except Exception as e:
+                    error_message = f"task run time error : {e}"
+                    logger.error(error_message)
+                    show_windows_message({
+                        "type": "error",
+                        "title": "定时任务运行出错",
+                        "message": error_message
+                    })
+        else:
+            logger.error(f'无效的task: ｛task｝')
+            continue
+
+
+def phrase(task):
+    """从文件中选取一行疆内容替换显示"""
+    filename = 'phrase.txt'
+    if 'filename' in task:
+        filename = task['filename']
+    file_ins = BASE_PATH / filename
+    data = file_ins.open('rt', encoding='utf-8').readlines()
+    task['content'] = task['content'] + random.choice([
+        i.strip() for i in data if i.strip()
+    ])
+    return task
+
+
+def add_addons():
+    """收集addons中的函数"""
+    for item in BASE_PATH.joinpath('addons').glob('*.py'):
+        module_path = item.relative_to(BASE_PATH).as_posix().replace('/', '.')[:-3]
+        module = import_module(module_path)
+        if hasattr(module, '__all__'):
+            for _item in module.__all__:
+                funcs[_item] = getattr(module, _item)
+
+
+funcs = {
+    'normal': lambda x: x,
+    'phrase': phrase,
+}
+
+add_addons()

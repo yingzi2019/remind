@@ -20,6 +20,7 @@ def config_logging():
     handlers = ['default']
     level = 'DEBUG' if debug else 'INFO'
     log_file = BASE_PATH.joinpath('dev_logs' if debug else 'logs', 'Runtime.log')
+    sql_log_file = BASE_PATH.joinpath('dev_logs' if debug else 'logs', 'Runtime-sql.log')
     debug and handlers.append('console')
     log_file.parent.mkdir(parents=True, exist_ok=True)
 
@@ -39,6 +40,17 @@ def config_logging():
                 'class': 'logging.StreamHandler',
                 'formatter': 'verbose'
             },
+            # 'django-sql': {
+            #     'level': level,
+            #     'class': 'logging.handlers.TimedRotatingFileHandler',
+            #     'filename': sql_log_file,
+            #     'when': 'W3',
+            #     'interval': 1,
+            #     # 'maxBytes': 1024 * 1024 * 25,
+            #     'backupCount': 7,  # 最多备份几个
+            #     'formatter': 'verbose',
+            #     'encoding': 'utf-8',
+            # },
             'default': {
                 'level': level,
                 'class': 'logging.handlers.TimedRotatingFileHandler',
@@ -52,8 +64,13 @@ def config_logging():
             }
         },
         'loggers': {
+            # 'django.db.backends': {
+            #     'handlers': handlers,
+            #     'level': 'DEBUG',
+            #     'propagate': False
+            # },
             'default': {
-                'handlers': handlers,
+                'handlers': ['default', 'console',],
                 'level': 'DEBUG'
             },
             'spider': {

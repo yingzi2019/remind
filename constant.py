@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 
-BASE_PATH = Path(sys.argv[0]).parent.resolve()
+BASE_PATH = Path(__file__).parent.resolve()
 
 __all__ = ['BASE_PATH']
 

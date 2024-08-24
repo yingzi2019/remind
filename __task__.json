@@ -1,0 +1,40 @@
+[
+  {
+    "func": "reload_environment",
+    "title": "reload environment",
+    "content": "重新加载环境变量.",
+    "type": "success",
+    "cron": "* * * * *"
+  },
+  {
+    "func": "reload_addons",
+    "title": "reload addons",
+    "content": "重新加载addons.",
+    "type": "success",
+    "cron": "* * * * *"
+  },
+  {
+    "title": "测试",
+    "content": "测试显示的消息",
+    "type": "error",
+    "cron": "1 * * * *",
+    "func": "normal"
+  },
+  {
+    "title": "短语",
+    "content": "",
+    "type": "info",
+    "cron": "0 * * * *",
+    "func": "phrase"
+  },
+  {
+    "func": "login_email_and_logout",
+    "cron": "15 15 1-5 * 3",
+    "type": "success",
+    "title": "邮箱登录",
+    "content": "邮箱已在登录中."
+  },
+  {
+    "func": "skip"
+  }
+]
