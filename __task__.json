@@ -24,7 +24,7 @@
     "title": "短语",
     "content": "",
     "type": "info",
-    "cron": "0 * * * *",
+    "cron": "5 * * * *",
     "func": "phrase"
   },
   {

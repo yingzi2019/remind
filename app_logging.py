@@ -4,8 +4,8 @@
 import logging
 from logging.config import dictConfig
 
-from constant import BASE_PATH
 from app_env import auto_load_env, get_env
+from constant import BASE_PATH
 
 
 class Formatter(logging.Formatter):

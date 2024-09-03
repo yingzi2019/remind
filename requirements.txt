@@ -1,4 +1,6 @@
-pydantic==2.7.4
-python-dotenv==1.0.1
-pypiwin32==223
+addict==2.4.0
 APScheduler==3.10.4
+playwright==1.46.0
+psutil==6.0.0
+python-dotenv==1.0.1
+notify-py==0.3.43

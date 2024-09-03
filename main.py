@@ -1,12 +1,13 @@
-import logging
 import asyncio
+import logging
 import sys
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
 from app_env import auto_load_env
 from app_logging import config_logging
 from constant import BASE_PATH
-from tools import reset_pid, JSONCache, process_tasks, wait_next_minute
+from tools import JSONCache, process_tasks, reset_pid, wait_next_minute
 
 auto_load_env()
 config_logging()
@@ -16,7 +17,7 @@ logger = logging.getLogger('default')
 
 async def run_tasks():
     cache = JSONCache(file=BASE_PATH / '__task__.json', init_content='[]')
-    cache.reload()
+    cache._reload()
     process_tasks(cache.data)
 
 
