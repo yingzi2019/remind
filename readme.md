@@ -5,7 +5,7 @@ tips
 
 info
 
-- 在window上运行的用于提醒的小程序
+- 跨平台定时提醒的程序
 - 需要停止, 运行参数增加 stop 或者在__task__.json中增加一个项目为{"func":"stop"}
 
 issue
